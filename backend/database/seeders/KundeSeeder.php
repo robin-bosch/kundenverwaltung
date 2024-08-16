@@ -16,7 +16,7 @@ class KundeSeeder extends Seeder
         $faker = Faker::create('de_DE');
 
         foreach (range(1, 50) as $index) {
-            DB::table('kundes')->insert([
+            DB::table('kunde')->insert([
                 'vorname' => $faker->firstName,
                 'nachname' => $faker->lastName,
                 'email' => $faker->unique()->safeEmail,
