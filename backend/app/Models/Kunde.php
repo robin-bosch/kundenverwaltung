@@ -10,4 +10,6 @@ class Kunde extends Model
     use HasFactory;
 
     protected $table = 'kunde';
+
+    protected $fillable = ['vorname', 'nachname', 'email', 'telefonnummer', 'strasse', 'plz', 'ort'];
 }
