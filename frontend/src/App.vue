@@ -2,7 +2,7 @@
   <v-app>
     <Header/>
     <v-main>
-
+      <KundenTabelle/>
     </v-main>
 
   </v-app>
