@@ -15,8 +15,8 @@
             <!-- Formular -->
             <v-card-text>
                 <v-form ref="form" v-model="formValid">
-                    <v-container>
-                        <v-row>
+                    <v-container class="pa-0 pa-sm-2">
+                        <v-row >
                             <v-col cols="12">
                                 <v-text-field 
                                     v-model="kunde.vorname" 

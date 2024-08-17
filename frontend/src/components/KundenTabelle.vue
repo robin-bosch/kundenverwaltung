@@ -1,19 +1,20 @@
 <template>
     <!-- Kundensuche und Hinzufügen-Button -->
     <v-container class="max-width-container">
-        <v-row class="d-flex align-center">
-            <v-col cols="12" sm="4">
+        <v-row class="ma-0">
+            <v-col cols="12" sm="6" lg="4" class="px-0">
                 <v-text-field
                     v-model="suche"
                     append-icon="mdi-magnify"
                     label="Kunden suchen"
+                    hide-details="auto"
                     @input="onSearch"
                 ></v-text-field>
             </v-col>
 
             <v-spacer></v-spacer>
 
-            <v-col cols="12" sm="4" class="text-right">
+            <v-col cols="12" sm="4" class="d-flex justify-center justify-sm-end align-center px-0">
                 <v-btn color="primary" @click="openModal">Kunde hinzufügen</v-btn>
             </v-col>
         </v-row>
@@ -30,13 +31,16 @@
             :items-per-page-text="`Einträge pro Seite`"
             :page.sync="pagination.page"
             :items-length="totalItems"
-            
-            @update:options="onPaginationUpdate"
+
+            no-data-text="Keine Kunden gefunden"
+
+            @update:itemsPerPage="onItemsPerPageUpdate"
+            @update:page="onPageUpdate"
         >
   
             <template v-slot:item.actions="{ item }">
                 <v-icon small @click="openModal(item)" class="mr-2">mdi-pencil</v-icon>
-                <v-icon small @click="deleteCustomer(item.id)" color="red">mdi-delete</v-icon>
+                <v-icon small @click="deleteKunde(item.id)" color="red">mdi-delete</v-icon>
             </template>
 
         </v-data-table-server>
@@ -52,8 +56,10 @@
 </template>
   
 <script>
+    import debounce from 'lodash.debounce';
     import KundenModal from './KundenModal.vue';
     import ApiService from "../services/ApiService";
+
 
     export default {
         components: {
@@ -117,9 +123,13 @@
                 });
             },
 
-            onPaginationUpdate(newPagination) {
-                this.pagination.page = newPagination.page;
-                this.pagination.itemsPerPage = newPagination.itemsPerPage;
+            onPageUpdate(newPagination) {
+                this.pagination.page = newPagination;
+                this.getKunden();
+            },
+
+            onItemsPerPageUpdate(newPagination) {
+                this.pagination.itemsPerPage = newPagination;
                 this.getKunden();
             },
 
@@ -145,9 +155,10 @@
                 this.modalSichtbar = false;
             },
 
-            onSearch() {
+            onSearch: debounce(function () {
                 this.pagination.page = 1;
-            },
+                this.getKunden();
+            }, 500),
 
             // Speichert einen Kunden vom Modal
             async saveKunde() {
@@ -175,13 +186,6 @@
                         this.getKunden();
                     });
                 }
-            },
-        },
-
-        watch: {
-            search(newSearch) {
-                this.pagination.page = 1;
-                this.getKunden();
             },
         },
         mounted() {
