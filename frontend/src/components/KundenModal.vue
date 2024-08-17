@@ -93,48 +93,46 @@
     </v-dialog>
 </template>
   
-  <script>
-    export default {
-        props: {
-            value: {
-                type: Boolean,
-                default: false
-            },
-            kunde: {
-                type: Object,
-                default: () => ({
-                    id: null,
-                    vorname: '',
-                    nachname: '',
-                    email: '',
-                    telefonnummer: '',
-                    strasse: '',
-                    plz: '',
-                    ort: ''
-                })
-            }
-        },
-        data() {
-            return {
-                visible: this.value,
-                formValid: false
-            };
-        },
-        watch: {
-            value(val) {
-                this.visible = val;
-            },
-            visible(val) {
-                this.$emit('input', val);
-            }
-        },
-        methods: {
-            // Validierung und Speichern des Kunden durch ein Signal
-            saveKunde() {
-                if (this.$refs.form.validate()) {
-                    this.$emit('save', this.kunde);
-                }
-            }
+<script setup>
+    import { ref, watch } from 'vue';
+
+    const props = defineProps({
+        kunde: {
+            type: Object,
+            default: () => ({
+                id: null,
+                vorname: '',
+                nachname: '',
+                email: '',
+                telefonnummer: '',
+                strasse: '',
+                plz: '',
+                ort: ''
+            })
+        }
+    });
+
+    // Reactives
+    const formValid = ref(false);
+    const visible = ref(false);
+
+    // Emits
+    const emit = defineEmits(['input', 'save']);
+
+    // Beobachte ob sich der Sichtbarkeits-Prop ändert
+    watch(() => props.value, (val) => {
+        visible.value = val;
+    });
+
+    // Beobachte ob sich das Formular ändert
+    watch(visible, (val) => {
+        emit('input', val);
+    });
+
+    // Validierung und speichern des Formulars
+    const saveKunde = () => {
+        if (formValid.value) {
+            emit('save', props.kunde);
         }
     };
 </script>

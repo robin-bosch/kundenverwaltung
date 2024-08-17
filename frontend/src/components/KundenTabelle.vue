@@ -40,7 +40,7 @@
   
             <template v-slot:item.actions="{ item }">
                 <v-icon small @click="openModal(item)" class="mr-2">mdi-pencil</v-icon>
-                <v-icon small @click="deleteKunde(item.id)" color="red">mdi-delete</v-icon>
+                <v-icon small @click="confirmDeleteKunde(item.id)" color="red">mdi-delete</v-icon>
             </template>
 
         </v-data-table-server>
@@ -52,146 +52,172 @@
             @save="saveKunde"
             @close="closeModal"
         />
+
+        <!-- Confirmmodal um das Löschen zu bestätigen -->
+        <ConfirmModal
+            v-model="confirmModalSichtbar"
+            :kundeId="selectedKunde"
+            @cancel="confirmModalSichtbar = false"
+            @confirm="deleteKunde()"
+        />
     </v-container>
 </template>
   
-<script>
+<script setup>
+    import { ref, reactive, watch, onMounted } from 'vue';
     import debounce from 'lodash.debounce';
     import KundenModal from './KundenModal.vue';
     import ApiService from "../services/ApiService";
+    import ConfirmModal from './ConfirmModal.vue';
 
+    // Tabellenüberschriften
+    const headers = [
+        { title: 'ID', value: 'id' },
+        { title: 'Vorname', value: 'vorname' },
+        { title: 'Nachname', value: 'nachname' },
+        { title: 'Email', value: 'email' },
+        { title: 'Straße + Hausnummer', value: 'strasse' },
+        { title: 'Postleitzahl', value: 'plz' },
+        { title: 'Ort', value: 'ort' },
+        { title: 'Aktionen', value: 'actions', sortable: false },
+    ];
 
-    export default {
-        components: {
-            KundenModal,
-        },
-        data() {
-            return {
-                headers: [
-                    { title: 'ID', value: 'id' },
-                    { title: 'Vorname', value: 'vorname' },
-                    { title: 'Nachname', value: 'nachname' },
-                    { title: 'Email', value: 'email' },
-                    { title: 'Straße + Hausnummer', value: 'strasse' },
-                    { title: 'Postleitzahl', value: 'plz' },
-                    { title: 'Ort', value: 'ort' },
-                    { title: 'Aktionen', value: 'actions', sortable: false },
-                ],
+    // Reactive state
+    const kunden = ref([]);
+    const suche = ref('');
+    const laden = ref(false);
 
-                kunden: [],
-                suche: '',
-                laden: false,
-            
-                pagination: {
-                page: 1,
-                itemsPerPage: 10,
-                    itemsPerPageOptions: [
-                        {value: 10, title: '10'},
-                        {value: 20, title: '20'},
-                        {value: 50, title: '50'},
-                        {value: 100, title: '100'},
-                    ]
-                },
-                totalItems: 0,
+    const pagination = reactive({
+        page: 1,
+        itemsPerPage: 10,
+        itemsPerPageOptions: [
+            { value: 10, title: '10' },
+            { value: 20, title: '20' },
+            { value: 50, title: '50' },
+            { value: 100, title: '100' },
+        ],
+    });
+    const totalItems = ref(0);
 
-                modalKunde: {
-                    id: null,
-                    vorname: '',
-                    nachname: '',
-                    email: '',
-                    telefonnummer: '',
-                    strasse: '',
-                    plz: '',
-                    ort: '',
-                },
-                modalSichtbar: false,
-            };
-        },
-        methods: {
-            resetForm() {
-                this.$refs.form.reset();
-                this.$refs.form.resetValidation();
-            },
+    // Reactive für das Modal zum Hinzufügen/Bearbeiten eines Kunden
+    const modalKunde = reactive({
+        id: null,
+        vorname: '',
+        nachname: '',
+        email: '',
+        telefonnummer: '',
+        strasse: '',
+        plz: '',
+        ort: '',
+    });
+    const modalSichtbar = ref(false);
 
-            getKunden() {
-                this.laden = true;
-                const { page, itemsPerPage } = this.pagination;
-                ApiService.getKunden(page, itemsPerPage, this.suche).then(response => {
-                    this.kunden = response.data.data;
-                    this.totalItems = response.data.total;
-                    this.laden = false;
-                });
-            },
+    // Reactive für das ConfirmModal zum Löschen eines Kunden
+    const confirmModalSichtbar = ref(false);
+    const selectedKunde = ref(null);
 
-            onPageUpdate(newPagination) {
-                this.pagination.page = newPagination;
-                this.getKunden();
-            },
-
-            onItemsPerPageUpdate(newPagination) {
-                this.pagination.itemsPerPage = newPagination;
-                this.getKunden();
-            },
-
-            openModal(customer = null) {
-                if (customer) {
-                    this.modalKunde = { ...customer };
-                } else {
-                    this.modalKunde = {
-                    id: null,
-                    vorname: '',
-                    nachname: '',
-                    email: '',
-                    telefonnummer: '',
-                    strasse: '',
-                    plz: '',
-                    ort: ''
-                    };
-                }
-                this.modalSichtbar = true;
-            },
-
-            closeModal() {
-                this.modalSichtbar = false;
-            },
-
-            onSearch: debounce(function () {
-                this.pagination.page = 1;
-                this.getKunden();
-            }, 500),
-
-            // Speichert einen Kunden vom Modal
-            async saveKunde() {
-                try {
-                    if (this.modalKunde.id) {
-                        // Kunde bearbeiten
-                        await ApiService.updateKunde(this.modalKunde.id, this.modalKunde);
-                    } 
-                    else {
-                        // Neuen Kunden hinzufügen
-                        await ApiService.addKunde(this.modalKunde);
-                    }
-                    this.closeModal();
-
-                } catch (error) {
-                    console.error(error);
-                }
-                this.getKunden();
-            },
-
-            // Löscht einen Kunden
-            deleteKunde(id) {
-                if (confirm('Möchten Sie diesen Kunden wirklich löschen?')) {
-                    ApiService.deleteKunde(id).then(() => {
-                        this.getKunden();
-                    });
-                }
-            },
-        },
-        mounted() {
-            this.getKunden();
-        },
+    /**
+     * 
+     * Tabellenevents
+     * 
+     */
+    // Getriggered wenn die Seite aktualisiert wird
+    const onPageUpdate = (newPage) => {
+        pagination.page = newPage;
+        getKunden();
     };
+
+    // Getriggered wenn die Anzahl der Einträge pro Seite aktualisiert wird
+    const onItemsPerPageUpdate = (newItemsPerPage) => {
+        pagination.itemsPerPage = newItemsPerPage;
+        getKunden();
+    };
+
+    // Suche nach Kunden, hat eine Verzögerung von 500ms um nicht bei jedem Tastendruck eine Anfrage zu senden
+    const onSearch = debounce(() => {
+        pagination.page = 1;
+        getKunden();
+    }, 500);
+
+
+    /**
+     * 
+     * Modalsteuerung
+     * 
+     */
+    // Öffne das Kundenmodal zum Hinzufügen/Bearbeiten eines Kunden
+    const openModal = (customer = null) => {
+    if (customer) {
+        Object.assign(modalKunde, customer);
+    } else {
+        Object.keys(modalKunde).forEach(key => modalKunde[key] = '');
+    }
+    modalSichtbar.value = true;
+    };
+
+    // Schließe das Kundenmodal
+    const closeModal = () => {
+        modalSichtbar.value = false;
+    };
+
+    // Öffne das ConfirmModal zum Löschen eines Kunden
+    const confirmDeleteKunde = (kundeId) => {
+        selectedKunde.value = kundeId;
+        confirmModalSichtbar.value = true;
+    };
+
+    /**
+     * 
+     * Kundenfunktionen
+     * 
+     */
+
+    // Lade Kunden -> Kann auch eine Suche beinhalten oder eine Änderung der Seitengröße
+    const getKunden = async () => {
+        laden.value = true;
+        try {
+            const { page, itemsPerPage } = pagination;
+            const response = await ApiService.getKunden(page, itemsPerPage, suche.value);
+            kunden.value = response.data.data;
+            totalItems.value = response.data.total;
+        } catch (error) {
+            console.error('Fehler beim Abrufen der Kunden:', error);
+        } finally {
+            laden.value = false;
+        }
+    };
+
+    // Speichern eines Kunden
+    const saveKunde = async () => {
+        try {
+            if (modalKunde.id) {
+                await ApiService.updateKunde(modalKunde.id, modalKunde);
+            } else {
+                await ApiService.addKunde(modalKunde);
+            }
+            closeModal();
+            getKunden();
+        } catch (error) {
+            console.error('Fehler beim Speichern des Kunden:', error);
+        }
+    };
+
+    // Löschen eines Kunden
+    const deleteKunde = async () => {
+        try {
+            await ApiService.deleteKunde(selectedKunde.value);
+            getKunden();
+        } catch (error) {
+            console.error('Fehler beim Löschen des Kunden:', error);
+        } finally {
+            confirmModalSichtbar.value = false;
+        }
+    };
+
+    // Erstes Laden der Kunden
+    onMounted(() => {
+        getKunden();
+    });
 </script>
 
 <style scoped>
