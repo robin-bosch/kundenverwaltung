@@ -9,6 +9,9 @@ class KundeController extends Controller
     // Alle Kunden anzeigen
     public function index(Request $request) {
         $query = Kunde::query();
+
+        // Sortierung nach ID
+        $query->orderBy('id', 'asc');
     
         // Suche nach Kunden
         if ($request->has('search') && !empty($request->input('search'))) {
