@@ -60,6 +60,13 @@
             @cancel="confirmModalSichtbar = false"
             @confirm="deleteKunde()"
         />
+
+        <!-- Benachrichtigung -->
+        <Benachrichtigung
+            v-model="benachrichtigungSichtbar"
+            :nachricht="benachrichtigungNachricht"
+            :typ="benachrichtigungTyp"
+        />
     </v-container>
 </template>
   
@@ -69,6 +76,7 @@
     import KundenModal from './KundenModal.vue';
     import ApiService from "../services/ApiService";
     import ConfirmModal from './ConfirmModal.vue';
+    import Benachrichtigung from './Benachrichtigung.vue';
 
     // Tabellenüberschriften
     const headers = [
@@ -116,6 +124,24 @@
     const confirmModalSichtbar = ref(false);
     const selectedKunde = ref(null);
 
+    // Reaktiver Zustand für Benachrichtigungen
+    const benachrichtigungSichtbar = ref(false);
+    const benachrichtigungNachricht = ref('');
+    const benachrichtigungTyp = ref('success');
+
+    /**
+     * 
+     * Benachrichtigungen funktionen
+     *  
+     */ 
+    // Funktion zum Anzeigen der Benachrichtigung
+    const zeigeBenachrichtigung = (nachricht, typ = 'success') => {
+        benachrichtigungNachricht.value = nachricht;
+        benachrichtigungTyp.value = typ;
+        benachrichtigungSichtbar.value = true;
+    };
+
+
     /**
      * 
      * Tabellenevents
@@ -145,19 +171,30 @@
      * Modalsteuerung
      * 
      */
+    // Reset Modalkunde
+    const resetModalKunde = () => {
+        modalKunde.id = null;
+        modalKunde.vorname = '';
+        modalKunde.nachname = '';
+        modalKunde.email = '';
+        modalKunde.telefonnummer = '';
+        modalKunde.strasse = '';
+        modalKunde.plz = '';
+        modalKunde.ort = '';
+    };
+
     // Öffne das Kundenmodal zum Hinzufügen/Bearbeiten eines Kunden
     const openModal = (customer = null) => {
-    if (customer) {
-        Object.assign(modalKunde, customer);
-    } else {
-        Object.keys(modalKunde).forEach(key => modalKunde[key] = '');
-    }
-    modalSichtbar.value = true;
+        if (customer) {
+            Object.assign(modalKunde, customer);
+        } 
+        modalSichtbar.value = true;
     };
 
     // Schließe das Kundenmodal
     const closeModal = () => {
         modalSichtbar.value = false;
+        resetModalKunde();
     };
 
     // Öffne das ConfirmModal zum Löschen eines Kunden
@@ -182,6 +219,7 @@
             totalItems.value = response.data.total;
         } catch (error) {
             console.error('Fehler beim Abrufen der Kunden:', error);
+            zeigeBenachrichtigung('Fehler beim Abrufen der Kunden.', 'error');
         } finally {
             laden.value = false;
         }
@@ -192,12 +230,15 @@
         try {
             if (modalKunde.id) {
                 await ApiService.updateKunde(modalKunde.id, modalKunde);
+                zeigeBenachrichtigung('Kunde erfolgreich aktualisiert!', 'success');
             } else {
                 await ApiService.addKunde(modalKunde);
+                zeigeBenachrichtigung('Kunde erfolgreich hinzugefügt!', 'success');
             }
             closeModal();
             getKunden();
         } catch (error) {
+            zeigeBenachrichtigung('Fehler beim Speichern des Kunden.', 'error');
             console.error('Fehler beim Speichern des Kunden:', error);
         }
     };
@@ -206,8 +247,10 @@
     const deleteKunde = async () => {
         try {
             await ApiService.deleteKunde(selectedKunde.value);
+            zeigeBenachrichtigung('Kunde erfolgreich gelöscht!', 'success');
             getKunden();
         } catch (error) {
+            zeigeBenachrichtigung('Fehler beim Löschen des Kunden.', 'error');
             console.error('Fehler beim Löschen des Kunden:', error);
         } finally {
             confirmModalSichtbar.value = false;
