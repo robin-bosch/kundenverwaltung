@@ -2,6 +2,8 @@
 
 Die ist eine Kundenverwaltungsapp, mit einem VueJS Frontend und einem Laravel Backend das als API genutzt wird.
 
+[Live-Webseite](https://kundenverwaltung.vercel.app/)
+
 ## Inhaltsverzeichnis
 
 1. [Projekt](#projekt)
