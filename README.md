@@ -61,7 +61,7 @@ Folgende Punkte lassen sich noch verbessern oder auch erweitern:
 Die offizielle README-Datei der Originalinstallation ist ebenfalls im Backend-Ordner verfügbar.
 1. **Projekt klonen - Gleicher Schritt beim Frontend, wird nur einmal für beides benötigt**  
    ```bash
-   git clone https://github.com/robin-boschkundenverwaltung.git
+   git clone https://github.com/robin-bosch/kundenverwaltung.git
    ```
 2. **In den Ordner navigieren**  
     ```bash
@@ -120,7 +120,7 @@ Die offizielle README-Datei der Originalinstallation ist ebenfalls im Frontend-O
 
 1. **Projekt klonen - Gleicher Schritt beim Backend, wird nur einmal für beides benötigt**  
    ```bash
-   git clone https://github.com/robin-boschkundenverwaltung.git
+   git clone https://github.com/robin-bosch/kundenverwaltung.git
    ```
 2. **In den Ordner navigieren**  
     ```bash
