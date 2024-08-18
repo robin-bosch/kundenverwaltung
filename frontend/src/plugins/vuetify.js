@@ -26,11 +26,12 @@ const lightTheme = {
 
 // Composables
 import { createVuetify } from 'vuetify'
+import storageProvider from '../services/storageProvider';
 
 // https://vuetifyjs.com/en/introduction/why-vuetify/#feature-guides
 export default createVuetify({
   theme: {
-    defaultTheme: 'dark',
+    defaultTheme: storageProvider.loadThemeChoice(),
     themes: {
       lightTheme,
     },

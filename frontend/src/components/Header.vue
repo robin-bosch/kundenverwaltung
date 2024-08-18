@@ -12,11 +12,14 @@
   
 <script setup>
     import { useTheme } from 'vuetify'
+    import storageProvider from '../services/storageProvider';
 
     const theme = useTheme();
 
+    // Toggled das Theme und speichert die Auswahl
     function toggleTheme() {
         theme.global.name.value = theme.global.current.value.dark ? 'light' : 'dark'
+        storageProvider.saveThemeChoice(theme.global.name.value);
     }
 </script>
 

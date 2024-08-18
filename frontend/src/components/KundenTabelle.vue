@@ -77,6 +77,7 @@
     import ApiService from "../services/ApiService";
     import ConfirmModal from './ConfirmModal.vue';
     import Benachrichtigung from './Benachrichtigung.vue';
+    import storageProvider from '../services/storageProvider';
 
     // Tabellenüberschriften
     const headers = [
@@ -97,7 +98,7 @@
 
     const pagination = reactive({
         page: 1,
-        itemsPerPage: 10,
+        itemsPerPage: storageProvider.loadItemsPerPage(), // Lade die Anzahl der Einträge pro Seite aus dem LocalStorage
         itemsPerPageOptions: [
             { value: 10, title: '10' },
             { value: 20, title: '20' },
@@ -156,6 +157,7 @@
     // Getriggered wenn die Anzahl der Einträge pro Seite aktualisiert wird
     const onItemsPerPageUpdate = (newItemsPerPage) => {
         pagination.itemsPerPage = newItemsPerPage;
+        storageProvider.saveItemsPerPage(newItemsPerPage);
         getKunden();
     };
 
